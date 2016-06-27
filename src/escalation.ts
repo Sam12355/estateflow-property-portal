@@ -1,16 +1,16 @@
 /**
- * Trusted-contact escalation with duplicate suppression and PII protection.
+ * Enquiry escalation with duplicate suppression and PII protection.
  *
  * This is the feature the playbook was built around. It is deliberately small: one vertical
  * slice, three requirements, and enough edge cases to make the review discipline matter.
  * The artefacts in docs/ are the point of this repository; this file is the evidence they
  * were followed.
  *
- * Specification: docs/specs/0001-trusted-contact-escalation.md
+ * Specification: docs/specs/0001-enquiry-escalation.md
  * What the agent got wrong, and what was corrected: AI_WORKLOG.md
  */
 
-export interface Contact {
+export interface Negotiator {
   readonly id: string;
   readonly displayName: string;
   readonly email: string | null;
@@ -19,23 +19,23 @@ export interface Contact {
 }
 
 export interface Delivery {
-  readonly contactId: string;
-  readonly incidentId: string;
+  readonly negotiatorId: string;
+  readonly enquiryId: string;
   readonly sentAt: number;
   readonly acknowledgedAt: number | null;
 }
 
 export interface EscalationRequest {
-  readonly incidentId: string;
-  readonly subjectDisplayName: string;
-  readonly contacts: readonly Contact[];
+  readonly enquiryId: string;
+  readonly enquirerDisplayName: string;
+  readonly negotiators: readonly Negotiator[];
   readonly deliveries: readonly Delivery[];
   readonly now: number;
   readonly windowMs?: number;
 }
 
 export type EscalationOutcome =
-  | { readonly kind: 'notify'; readonly contact: Contact; readonly message: SafeMessage }
+  | { readonly kind: 'notify'; readonly negotiator: Negotiator; readonly message: SafeMessage }
   | { readonly kind: 'suppressed'; readonly reason: SuppressionReason }
   | { readonly kind: 'waiting'; readonly untilMs: number }
   | { readonly kind: 'exhausted' };
@@ -50,16 +50,16 @@ export const DEFAULT_WINDOW_MS = 3 * 60_000;
 /**
  * The message that goes out.
  *
- * Note what is not in it. No email address, no phone number, no coordinate, no incident
- * identifier in the body. The recipient already knows who the subject is; everything else
- * is behind a signed link that names one incident and one contact and expires.
+ * Note what is not in it. No email address, no phone number, no coordinate, no enquiry
+ * identifier in the body. The recipient already knows which enquiry it is; everything else
+ * is behind a signed link that names one enquiry and one negotiator and expires.
  *
  * This shape is the PII protection requirement, expressed as a type rather than as a
  * convention somebody has to remember.
  */
 export interface SafeMessage {
   readonly recipientName: string;
-  readonly subjectFirstName: string;
+  readonly enquirerFirstName: string;
   readonly body: string;
   readonly linkToken: string;
 }
@@ -79,31 +79,31 @@ export function nextEscalation(request: EscalationRequest): EscalationOutcome {
     return { kind: 'suppressed', reason: 'already_acknowledged' };
   }
 
-  const ordered = [...request.contacts].sort(
+  const ordered = [...request.negotiators].sort(
     (a, b) => a.priority - b.priority || a.id.localeCompare(b.id),
   );
 
-  const notified = new Set(request.deliveries.map((delivery) => delivery.contactId));
-  const candidates = ordered.filter((contact) => !notified.has(contact.id));
+  const notified = new Set(request.deliveries.map((delivery) => delivery.negotiatorId));
+  const candidates = ordered.filter((negotiator) => !notified.has(negotiator.id));
 
   if (candidates.length === 0) return { kind: 'exhausted' };
 
   /*
-   * A contact with neither an email address nor a phone number cannot be reached, so the
+   * A negotiator with neither an email address nor a phone number cannot be reached, so the
    * chain moves past them. Reporting success would be a lie, and failing the whole
-   * escalation would punish the subject for a data problem in their contact list.
+   * escalation would punish the enquirer for a data problem in the negotiator list.
    *
    * This is a filter rather than a recursive call with a synthetic delivery injected. The
    * first version did the latter, and the injected delivery made the timing branch below
    * think a message had just been sent, so the chain waited out a window for something
    * that was never sent. A spec-derived test caught it; see AI_WORKLOG.md entry 2.
    */
-  const next = candidates.find((contact) => contact.email !== null || contact.phone !== null);
+  const next = candidates.find((negotiator) => negotiator.email !== null || negotiator.phone !== null);
 
   if (next === undefined) return { kind: 'suppressed', reason: 'no_reachable_channel' };
 
-  // The first contact goes immediately. Everyone after waits out the window from the last
-  // send, so a slow first delivery does not eat the time the next contact gets. Only real
+  // The first negotiator goes immediately. Everyone after waits out the window from the last
+  // send, so a slow first delivery does not eat the time the next negotiator gets. Only real
   // deliveries count here, which is exactly what the bug above got wrong.
   if (notified.size > 0) {
     const lastSentAt = request.deliveries.reduce(
@@ -116,24 +116,24 @@ export function nextEscalation(request: EscalationRequest): EscalationOutcome {
 
   return {
     kind: 'notify',
-    contact: next,
+    negotiator: next,
     message: composeMessage(next, request),
   };
 }
 
-function composeMessage(contact: Contact, request: EscalationRequest): SafeMessage {
-  const subjectFirstName = firstNameOnly(request.subjectDisplayName);
+function composeMessage(negotiator: Negotiator, request: EscalationRequest): SafeMessage {
+  const enquirerFirstName = firstNameOnly(request.enquirerDisplayName);
 
   return {
-    recipientName: firstNameOnly(contact.displayName),
-    subjectFirstName,
+    recipientName: firstNameOnly(negotiator.displayName),
+    enquirerFirstName,
     // Deliberately vague about the situation and specific about what to do. The link
-    // carries the detail, behind a token scoped to one incident and one contact.
+    // carries the detail, behind a token scoped to one enquiry and one negotiator.
     body:
-      `${subjectFirstName} has raised a GuardianLink alert and asked for you. ` +
+      `${enquirerFirstName} has raised a EstateFlow alert and asked for you. ` +
       'Open the link to see the latest and let them know you have seen it. ' +
-      'GuardianLink is a portfolio demonstration and does not contact emergency services.',
-    linkToken: `${request.incidentId}:${contact.id}`,
+      'EstateFlow is a portfolio demonstration and does not negotiator emergency services.',
+    linkToken: `${request.enquiryId}:${negotiator.id}`,
   };
 }
 
@@ -146,15 +146,15 @@ function composeMessage(contact: Contact, request: EscalationRequest): SafeMessa
  */
 export function firstNameOnly(displayName: string): string {
   const trimmed = displayName.trim();
-  if (trimmed.length === 0) return 'A GuardianLink user';
-  return trimmed.split(/\s+/)[0] ?? 'A GuardianLink user';
+  if (trimmed.length === 0) return 'A EstateFlow user';
+  return trimmed.split(/\s+/)[0] ?? 'A EstateFlow user';
 }
 
 /**
  * Redacts a structure before it reaches a log sink.
  *
  * Matches by key name at any depth so a developer logging a whole request object produces
- * a redacted line rather than an incident. This is a safety net, not permission: the rule
+ * a redacted line rather than an enquiry. This is a safety net, not permission: the rule
  * is still to log identifiers rather than values.
  */
 const SENSITIVE_KEYS = [
@@ -203,11 +203,11 @@ export function escalationLogFields(
   outcome: EscalationOutcome,
 ): Record<string, unknown> {
   return {
-    incidentId: request.incidentId,
-    contactCount: request.contacts.length,
+    enquiryId: request.enquiryId,
+    negotiatorCount: request.negotiators.length,
     deliveryCount: request.deliveries.length,
     outcome: outcome.kind,
-    ...(outcome.kind === 'notify' ? { contactId: outcome.contact.id } : {}),
+    ...(outcome.kind === 'notify' ? { negotiatorId: outcome.negotiator.id } : {}),
     ...(outcome.kind === 'suppressed' ? { suppressionReason: outcome.reason } : {}),
   };
 }

@@ -7,9 +7,9 @@ specific to this repository.
 
 ### T1. Messaging the wrong person, or the same person twice
 
-**Mitigation:** the delivery set is consulted before choosing a contact, and any
+**Mitigation:** the delivery set is consulted before choosing a negotiator, and any
 acknowledgement stops the chain entirely. A test runs the escalation twenty times and
-asserts each contact is notified exactly once.
+asserts each negotiator is notified exactly once.
 
 ### T2. Personal data leaving through a message
 
@@ -28,9 +28,9 @@ passed by mistake. Both tested, including the case where the whole request objec
 
 ### T4. An escalation chain that stalls
 
-**Vector:** a contact with no reachable channel blocks the chain, so nobody is told.
+**Vector:** a negotiator with no reachable channel blocks the chain, so nobody is told.
 
-**Mitigation:** unreachable contacts are filtered when choosing, and do not start the timing
+**Mitigation:** unreachable negotiators are filtered when choosing, and do not start the timing
 window. This was a real bug, not a hypothetical one; see worklog entry 2.
 
 ## Part two: the process

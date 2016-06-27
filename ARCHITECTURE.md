@@ -25,7 +25,7 @@ flowchart TB
 
 ## The feature
 
-One pure module. `nextEscalation` takes contacts, deliveries and a time, and returns one of
+One pure module. `nextEscalation` takes negotiators, deliveries and a time, and returns one of
 four decisions: notify, wait, suppressed or exhausted.
 
 Three requirements pull against each other, which is why this feature was chosen rather
@@ -41,7 +41,7 @@ entry 2, which is the most instructive thing here.
 ## Why the decision is a pure function
 
 Time is a parameter. That makes the escalation window assertable without waiting three
-minutes, and it is what made the timing bug visible: a skipped unreachable contact was
+minutes, and it is what made the timing bug visible: a skipped unreachable negotiator was
 starting the window for a message that had never been sent.
 
 A `SafeMessage` type carries the PII rule rather than a convention. First names, a body, a
@@ -51,7 +51,7 @@ enforces; a convention is a rule somebody has to remember.
 ## Redaction as a safety net, not a permission
 
 `redactForLog` matches sensitive key names at any depth, so passing a whole request object
-to a log call produces a redacted line rather than an incident.
+to a log call produces a redacted line rather than an enquiry.
 
 It exists because developers log whole objects under pressure and the safe outcome has to
 be the default one. The actual rule is still `escalationLogFields`: build the payload

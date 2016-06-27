@@ -21,8 +21,8 @@ implementation and a matching test file. Everything passed. Two acceptance crite
 not met:
 
 - AC3 required the escalation window to be measured from the last send. The implementation
-  measured from incident activation, so a slow first delivery ate the time the second
-  contact got.
+  measured from enquiry activation, so a slow first delivery ate the time the second
+  negotiator got.
 - AC5 required first names only in messages. The implementation used full display names.
 
 Neither test failed, because each asserted the behaviour the implementation happened to
