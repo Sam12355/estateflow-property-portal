@@ -11,7 +11,7 @@ reviewing.
 ## Entry 1 - Tests written after the implementation passed, and were worthless
 
 **Delegated:** implement `nextEscalation` from
-[docs/specs/0001-trusted-contact-escalation.md](docs/specs/0001-trusted-contact-escalation.md),
+[docs/specs/0001-enquiry-escalation.md](docs/specs/0001-enquiry-escalation.md),
 with tests.
 
 **Produced:** a working-looking implementation and a test file. Everything passed on the
@@ -22,8 +22,8 @@ what the code did rather than what the specification asked for. Two acceptance c
 were not met and nothing failed:
 
 - **AC3** says the escalation window is measured from the last send. The implementation
-  measured it from the incident activation time. With a slow first delivery, the second
-  contact was notified early, which is the opposite of the intent.
+  measured it from the enquiry activation time. With a slow first delivery, the second
+  negotiator was notified early, which is the opposite of the intent.
 - **AC5** says a message carries first names only. The implementation used the full display
   name. Nothing tested it, because the test asserted the string the implementation
   produced.
@@ -40,28 +40,28 @@ and it is now the first rule in [docs/ai/WORKFLOW.md](docs/ai/WORKFLOW.md).
 
 ---
 
-## Entry 2 - A skipped contact started a timer for a message that was never sent
+## Entry 2 - A skipped negotiator started a timer for a message that was never sent
 
-**Delegated:** handle AC4, a contact with neither an email address nor a phone number.
+**Delegated:** handle AC4, a negotiator with neither an email address nor a phone number.
 
-**Produced:** a recursive call that removed the unreachable contact from the list and
+**Produced:** a recursive call that removed the unreachable negotiator from the list and
 injected a synthetic delivery record so the recursion would terminate.
 
-**What broke:** the test `skips a contact with no email address and no phone number`
+**What broke:** the test `skips a negotiator with no email address and no phone number`
 expected `notify` and got `waiting`.
 
 **Diagnosis:** the injected delivery made the timing branch believe a message had just been
-sent. So the chain waited out a three-minute window before contacting the next person, for
-a message that had never gone anywhere. In a real incident that is three minutes of nobody
-being told, caused by a data problem in a contact list.
+sent. So the chain waited out a three-minute window before notifying the next person, for
+a message that had never gone anywhere. In a real enquiry that is three minutes of nobody
+being told, caused by a data problem in a negotiator list.
 
-**Correction:** replaced the recursion with a filter. Unreachable contacts are skipped when
+**Correction:** replaced the recursion with a filter. Unreachable negotiators are skipped when
 choosing the next candidate; only real deliveries count towards the timing. The comment in
 the code records why, so the next person to touch it does not reintroduce the recursive
 version.
 
 **Why it slipped through:** the recursive version is locally reasonable. It terminates, it
-skips the right contact, and it reads fine. It is only wrong in relation to a branch
+skips the right negotiator, and it reads fine. It is only wrong in relation to a branch
 fifteen lines further down. That is consistently where generated code fails: not in the
 function being written, but in its interaction with something else.
 
@@ -76,7 +76,7 @@ function being written, but in its interaction with something else.
 > Redacts sensitive fields recursively, including inside arrays and Maps.
 
 **What was wrong:** it did not handle Maps. `Object.entries` on a Map returns an empty
-array, so a Map of contacts would have passed through untouched, and the comment said
+array, so a Map of negotiators would have passed through untouched, and the comment said
 otherwise.
 
 **Correction:** removed Map handling from the comment rather than adding it to the code,
@@ -98,7 +98,7 @@ in the review checklist.
 `escalationLogFields` contains no email address.
 
 **Rejected outright.** The assertion was the requirement. The refactor had reintroduced
-`contact.displayName` into the log fields, and the correct response was to take it back out.
+`negotiator.displayName` into the log fields, and the correct response was to take it back out.
 
 **The finding:** "make the tests pass" is a dangerous instruction to give an agent, because
 deleting a test satisfies it. The instruction has to be "make the code correct", and the

@@ -1,9 +1,22 @@
-# ai-engineering-playbook
+# estateflow-property-portal
 
-**How I use an AI coding agent as an engineering tool rather than a code generator, and
-what it actually got wrong.**
+**One slice of a property portal, built the way I build with an AI coding agent: what the
+process is, and what the agent actually got wrong.**
 
-> Part of the [GuardianLink portfolio](../PORTFOLIO.md).
+> Part of the [portfolio](../PORTFOLIO.md). A demonstration, not a portal any branch runs
+> on.
+
+> **A reconstruction, not an employer's codebase.** I worked on property software in 2016
+> and 2017. The slice here is the one that mattered on a Monday morning: an enquiry comes
+> in, a negotiator has a window to pick it up, and if nobody does it goes to the branch
+> manager, without the enquirer being messaged four times and without their details ending
+> up in a log. Written from scratch for the portfolio; nothing came from an employer.
+>
+> **The original was ASP.NET MVC 5 and C#**, on SQL Server with Entity Framework 6, with
+> jQuery and Bootstrap 3 on the front end. This is a modern TypeScript reconstruction. The
+> escalation rules are what the repository is about, and rebuilding them on 2016 tooling
+> would have been a lot of work that showed nothing about the rules, so I kept the working
+> implementation and said so here.
 
 [![tests](https://img.shields.io/badge/tests-24%20passing-brightgreen)](docs/test-results/)
 [![licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
@@ -25,8 +38,9 @@ to make the suite pass, and what the process now does about it.
 
 One vertical slice, chosen because it has three requirements that pull against each other:
 
-> Add trusted-contact escalation, preventing duplicate notifications and protecting private
-> user information.
+> Route a new property enquiry to the assigned negotiator, escalate it to the branch
+> manager if nobody picks it up, without notifying anyone twice and without leaking the
+> enquirer's details.
 
 - **Escalation** has to walk a priority chain with a timing window
 - **Duplicate prevention** has to survive the scheduler running twice, overlapping with
@@ -69,7 +83,7 @@ All four are in the worklog with the correction. In summary:
 | Entry | What happened | The lesson |
 |-------|---------------|------------|
 | 1 | Tests written after the code passed, and hid two unmet criteria | Tests come from the spec, not the diff |
-| 2 | A skipped contact started an escalation timer for a message never sent | Generated code fails at the interaction, not in the function |
+| 2 | A skipped negotiator started an escalation timer for a message never sent | Generated code fails at the interaction, not in the function |
 | 3 | A comment described behaviour the code did not have | Comments are as confident as code and checked by nothing |
 | 4 | A failing assertion was deleted to make the suite pass | "Make the tests pass" is a dangerous instruction |
 
@@ -92,7 +106,7 @@ needing a view of how one piece interacts with another.
 
 | Artefact | Where |
 |----------|-------|
-| Product request and specification | [docs/specs/0001-trusted-contact-escalation.md](docs/specs/0001-trusted-contact-escalation.md) |
+| Product request and specification | [docs/specs/0001-enquiry-escalation.md](docs/specs/0001-enquiry-escalation.md) |
 | Agent instructions | [CLAUDE.md](CLAUDE.md), [AGENTS.md](AGENTS.md) |
 | Workflow | [docs/ai/WORKFLOW.md](docs/ai/WORKFLOW.md) |
 | Hard security rules | [docs/ai/SECURITY_RULES.md](docs/ai/SECURITY_RULES.md) |
@@ -119,7 +133,7 @@ The brief asks for ten. Here is the honest state of each.
 | Formatter | Configured, run |
 | Type checker | Run, clean, strict with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` |
 | Unit tests | Run, 24 passing |
-| Integration tests | The feature is a pure function; its integration surface is the flagship's notification worker. Not duplicated here |
+| Integration tests | The feature is a pure function. Its integration surface is a notification worker, which is not in this repository |
 | End-to-end tests | Not applicable. There is no UI and no HTTP surface in this repository |
 | Dependency audit | Configured in CI, not run on the build machine |
 | Secret scan | Configured in CI, not run on the build machine |
@@ -141,8 +155,8 @@ implies otherwise.
 
 ## Suggested repository metadata
 
-**Description:** Specification-first workflow for AI-assisted engineering, with a verified
-feature underneath and an honest record of what the agent got wrong.
+**Description:** Property enquiry routing and escalation, built with a specification-first
+AI-assisted workflow and an honest record of what the agent got wrong.
 
 **Topics:** `ai-assisted-development` `claude-code` `engineering-process`
 `code-review` `specification-driven` `typescript` `testing` `portfolio`

@@ -9,8 +9,8 @@ container build and a repository that lists a check it cannot run should either 
 say so.
 
 ```bash
-docker build -t ai-engineering-playbook .
-docker run --rm ai-engineering-playbook
+docker build -t estateflow-property-portal .
+docker run --rm estateflow-property-portal
 ```
 
 **This has been executed.** The image builds and the module loads. Multi-stage, non-root,

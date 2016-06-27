@@ -12,14 +12,14 @@ pnpm verify        # lint, type-check, tests
 ## The ordering rule
 
 **Tests are written from the acceptance criteria in
-[docs/specs/0001-trusted-contact-escalation.md](docs/specs/0001-trusted-contact-escalation.md),
+[docs/specs/0001-enquiry-escalation.md](docs/specs/0001-enquiry-escalation.md),
 before the implementation exists.**
 
 This is not a style preference. In the first attempt the agent wrote the implementation and
 then wrote tests against it. Everything passed and two acceptance criteria were unmet:
 
 - **AC3** said the escalation window is measured from the last send. The implementation
-  measured it from the incident activation time.
+  measured it from the enquiry activation time.
 - **AC5** said a message carries first names only. The implementation used full display
   names.
 
@@ -40,7 +40,7 @@ verification of the specification rather than as a list of function names.
 | AC1 ordering | Highest priority first, list order ignored, deterministic tiebreak |
 | AC2 duplicate suppression | Already notified, acknowledgement stops, repeated runs, exhausted |
 | AC3 timing | Immediate first, wait before second, window from last send |
-| AC4 unreachable contacts | Skipped, all-unreachable reported, no infinite loop |
+| AC4 unreachable negotiators | Skipped, all-unreachable reported, no infinite loop |
 | AC5 protecting personal information | First names, no address in body, notice present, empty-name fallback |
 | AC5 logging | Redaction at depth, whole-object redaction, identifiers kept, depth limit |
 
@@ -50,7 +50,7 @@ verification of the specification rather than as a list of function names.
 runs on a timer and will overlap with itself. Without idempotence that becomes a stream of
 messages to somebody's family.
 
-**"does not loop for ever on an unreachable contact".** This one existed only because AC4
+**"does not loop for ever on an unreachable negotiator".** This one existed only because AC4
 said "without stalling the chain". It caught the recursion bug that would otherwise have
 been a hang in production.
 

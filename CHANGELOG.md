@@ -11,7 +11,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 ## [0.1.0] - 2026-03
 
 ### Added
-- Trusted-contact escalation with duplicate suppression and PII protection
+- Enquiry escalation with duplicate suppression and PII protection
 - Redaction helper covering nested structures, with a depth limit
 - Log-field construction from identifiers only
 - Specification written and agreed before implementation
@@ -20,7 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 ### Fixed during development
 - Tests generated alongside the implementation passed while two acceptance criteria were
   unmet. Rewritten from the criteria first, which found both immediately
-- Skipping an unreachable contact injected a synthetic delivery to terminate a recursion,
+- Skipping an unreachable negotiator injected a synthetic delivery to terminate a recursion,
   which started the escalation timer for a message that was never sent. Replaced with a
   filter
 - A comment claimed the redactor handled Maps. It did not. The comment was corrected and a

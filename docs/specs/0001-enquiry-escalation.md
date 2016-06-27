@@ -1,4 +1,4 @@
-# 0001 - Trusted-contact escalation
+# 0001 - Enquiry escalation
 
 **Status:** implemented
 **Date:** 2026-03
@@ -8,23 +8,23 @@ were derived from, which is the ordering that caught two real bugs.
 
 ## Product request
 
-> When someone raises an alert, their emergency contact is told. Sometimes that person does
+> When someone raises an alert, their emergency negotiator is told. Sometimes that person does
 > not see it, or cannot answer. We need the next person in their list to be told too, but
 > not so fast that everyone gets woken up, and not twice.
 
 ## Clarified requirement
 
-Notify the highest-priority contact first. If nobody has acknowledged within a configured
+Notify the highest-priority negotiator first. If nobody has acknowledged within a configured
 window, notify the next one. Stop the moment anybody acknowledges. Nobody is notified twice
-for one incident, whatever happens to the scheduler.
+for one enquiry, whatever happens to the scheduler.
 
 ## Scope
 
 **In scope:** priority ordering, the timing window, duplicate suppression, unreachable
-contacts, the content of the message, and what is safe to log.
+negotiators, the content of the message, and what is safe to log.
 
 **Out of scope:** actually sending anything (channel adapters), the acknowledgement
-endpoint, retry and dead-letter handling, and contact verification. The first two exist in
+endpoint, retry and dead-letter handling, and negotiator verification. The first two exist in
 the flagship; the third is the notification-engine repository.
 
 ## Assumptions
@@ -32,12 +32,12 @@ the flagship; the third is the notification-engine repository.
 - **A three-minute window.** Long enough that somebody who has picked up their phone can
   respond, short enough that a real emergency is not sitting on it. No data to tune it
   against, and it is stated here as a guess rather than presented as a finding.
-- **Any acknowledgement stops the chain**, not only one from the contact currently being
+- **Any acknowledgement stops the chain**, not only one from the negotiator currently being
   waited on. The point is to reach somebody, and somebody has been reached.
-- **An unreachable contact is skipped, not an error.** A contact with no email address and
-  no phone number is a data problem in someone's contact list. Failing the whole escalation
+- **An unreachable negotiator is skipped, not an error.** A negotiator with no email address and
+  no phone number is a data problem in someone's negotiator list. Failing the whole escalation
   would punish the subject for it.
-- **Priority ties are broken by contact identifier.** Without a deterministic tiebreak the
+- **Priority ties are broken by negotiator identifier.** Without a deterministic tiebreak the
   escalation order changes between runs and is not reproducible.
 
 ## Affected systems
@@ -49,13 +49,13 @@ the flagship; the third is the notification-engine repository.
 
 ## Acceptance criteria
 
-- [x] **AC1** The highest-priority contact is notified first, by priority rather than list
+- [x] **AC1** The highest-priority negotiator is notified first, by priority rather than list
       order, with a deterministic tiebreak.
-- [x] **AC2** Nobody is notified twice for the same incident. Running the escalation
+- [x] **AC2** Nobody is notified twice for the same enquiry. Running the escalation
       repeatedly notifies each person exactly once.
-- [x] **AC3** The window is measured from the last send, not from the incident, so a slow
-      first delivery does not eat the time the next contact gets.
-- [x] **AC4** A contact with no reachable channel is skipped without stalling the chain and
+- [x] **AC3** The window is measured from the last send, not from the enquiry, so a slow
+      first delivery does not eat the time the next negotiator gets.
+- [x] **AC4** A negotiator with no reachable channel is skipped without stalling the chain and
       without starting the timing window.
 - [x] **AC5** No personal data leaves the system beyond what the recipient already has:
       first names only in the message, no address or number in the body, and nothing
@@ -63,13 +63,13 @@ the flagship; the third is the notification-engine repository.
 
 ## Security and privacy analysis
 
-- **New data collected:** none. Existing contact records only.
-- **Who can see it:** the contact receives a message naming the subject's first name. The
-  link is scoped to one incident and one contact and expires.
+- **New data collected:** none. Existing negotiator records only.
+- **Who can see it:** the negotiator receives a message naming the subject's first name. The
+  link is scoped to one enquiry and one negotiator and expires.
 - **Retention:** delivery records follow the notification retention setting.
 - **New authorisation decision:** none in this slice. The caller has already established
-  that the incident exists and is open.
-- **New attack surface:** a contact list with many entries could be used to send several
+  that the enquiry exists and is open.
+- **New attack surface:** a negotiator list with many entries could be used to send several
   messages. Bounded by the step limit and by per-recipient rate limiting in the
   notification engine.
 - **Personal data near logs:** yes, and it is the main risk here. Mitigated by constructing

@@ -2,7 +2,7 @@
 #
 # Present because the required-checks list includes a container build, and because a
 # repository that lists a check it cannot run should either run it or say so. This one can
-# be run: `docker build -t ai-engineering-playbook .`
+# be run: `docker build -t estateflow-property-portal .`
 #
 # Multi-stage, so the runtime image has no compiler, no source and no dev dependencies.
 

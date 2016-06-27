@@ -5,7 +5,7 @@ AI agent is prevented from introducing a security defect, and what happened when
 
 ## Reporting
 
-Open an issue. Do not include real contact details.
+Open an issue. Do not include real negotiator details.
 
 ## The hard rules
 
@@ -41,11 +41,11 @@ explicitly from identifiers, and a redaction pass catches anything that slips th
   pass. Mitigated by also matching `note` and `body`, and by review. There is no general
   fix that does not involve classifying data at the type level, which is a much larger
   change than this feature warrants.
-- **The link token is `incidentId:contactId`.** In this repository that is a placeholder;
+- **The link token is `enquiryId:negotiatorId`.** In this repository that is a placeholder;
   the flagship signs and expires it. A host using this module as-is would have an unsigned
   credential, which is stated in the source rather than left to be discovered.
 - **No authentication or authorisation.** The caller has already established that the
-  incident exists and is open. This module trusts that.
+  enquiry exists and is open. This module trusts that.
 
 ## What this repository proves about security and AI assistance
 

@@ -6,14 +6,14 @@ import {
   firstNameOnly,
   nextEscalation,
   redactForLog,
-  type Contact,
+  type Negotiator,
   type Delivery,
   type EscalationRequest,
 } from './escalation';
 
 /**
  * These tests were written from the acceptance criteria in
- * docs/specs/0001-trusted-contact-escalation.md, before the implementation existed.
+ * docs/specs/0001-enquiry-escalation.md, before the implementation existed.
  *
  * That ordering is the single most important habit in this playbook. In the first attempt
  * the agent wrote the implementation and then wrote tests against it; they passed, and two
@@ -23,7 +23,7 @@ import {
 
 const NOW = 1_773_000_000_000;
 
-const contacts: Contact[] = [
+const negotiators: Negotiator[] = [
   { id: 'c1', displayName: 'Ada Lovelace', email: 'ada@example.com', phone: null, priority: 1 },
   { id: 'c2', displayName: 'Bram Bakker', email: null, phone: '+1 555 0101', priority: 2 },
   { id: 'c3', displayName: 'Cleo Duarte', email: 'cleo@example.com', phone: null, priority: 3 },
@@ -31,68 +31,68 @@ const contacts: Contact[] = [
 
 function request(overrides: Partial<EscalationRequest> = {}): EscalationRequest {
   return {
-    incidentId: 'incident-1',
-    subjectDisplayName: 'Juno Petrov',
-    contacts,
+    enquiryId: 'enquiry-1',
+    enquirerDisplayName: 'Juno Petrov',
+    negotiators,
     deliveries: [],
     now: NOW,
     ...overrides,
   };
 }
 
-function delivery(contactId: string, overrides: Partial<Delivery> = {}): Delivery {
+function delivery(negotiatorId: string, overrides: Partial<Delivery> = {}): Delivery {
   return {
-    contactId,
-    incidentId: 'incident-1',
+    negotiatorId,
+    enquiryId: 'enquiry-1',
     sentAt: NOW,
     acknowledgedAt: null,
     ...overrides,
   };
 }
 
-// AC1: the highest-priority contact is notified first.
+// AC1: the highest-priority negotiator is notified first.
 describe('AC1 - ordering', () => {
-  it('notifies the highest-priority contact first', () => {
+  it('notifies the highest-priority negotiator first', () => {
     const outcome = nextEscalation(request());
 
     expect(outcome.kind).toBe('notify');
     if (outcome.kind !== 'notify') return;
-    expect(outcome.contact.id).toBe('c1');
+    expect(outcome.negotiator.id).toBe('c1');
   });
 
   it('uses priority, not the order of the list', () => {
     const outcome = nextEscalation(
-      request({ contacts: [contacts[2]!, contacts[0]!, contacts[1]!] }),
+      request({ negotiators: [negotiators[2]!, negotiators[0]!, negotiators[1]!] }),
     );
     expect(outcome.kind).toBe('notify');
     if (outcome.kind !== 'notify') return;
-    expect(outcome.contact.id).toBe('c1');
+    expect(outcome.negotiator.id).toBe('c1');
   });
 
   it('breaks a priority tie deterministically', () => {
-    // Without a tiebreak, two contacts at the same priority alternate between runs and
+    // Without a tiebreak, two negotiators at the same priority alternate between runs and
     // the escalation order is not reproducible.
-    const tied: Contact[] = [
-      { ...contacts[0]!, id: 'zz', priority: 1 },
-      { ...contacts[1]!, id: 'aa', priority: 1 },
+    const tied: Negotiator[] = [
+      { ...negotiators[0]!, id: 'zz', priority: 1 },
+      { ...negotiators[1]!, id: 'aa', priority: 1 },
     ];
-    const outcome = nextEscalation(request({ contacts: tied }));
+    const outcome = nextEscalation(request({ negotiators: tied }));
     expect(outcome.kind).toBe('notify');
     if (outcome.kind !== 'notify') return;
-    expect(outcome.contact.id).toBe('aa');
+    expect(outcome.negotiator.id).toBe('aa');
   });
 });
 
-// AC2: nobody is notified twice for the same incident.
+// AC2: nobody is notified twice for the same enquiry.
 describe('AC2 - duplicate suppression', () => {
-  it('does not notify a contact who has already been notified', () => {
+  it('does not notify a negotiator who has already been notified', () => {
     const outcome = nextEscalation(
       request({ deliveries: [delivery('c1')], now: NOW + DEFAULT_WINDOW_MS + 1 }),
     );
 
     expect(outcome.kind).toBe('notify');
     if (outcome.kind !== 'notify') return;
-    expect(outcome.contact.id).toBe('c2');
+    expect(outcome.negotiator.id).toBe('c2');
   });
 
   it('stops entirely once anybody acknowledges', () => {
@@ -108,7 +108,7 @@ describe('AC2 - duplicate suppression', () => {
     expect(outcome.reason).toBe('already_acknowledged');
   });
 
-  it('stops even when the acknowledgement came from a later contact', () => {
+  it('stops even when the acknowledgement came from a later negotiator', () => {
     const outcome = nextEscalation(
       request({
         deliveries: [delivery('c1'), delivery('c2', { acknowledgedAt: NOW + 300_000 })],
@@ -129,8 +129,8 @@ describe('AC2 - duplicate suppression', () => {
       const outcome = nextEscalation(request({ deliveries, now }));
 
       if (outcome.kind === 'notify') {
-        notified.push(outcome.contact.id);
-        deliveries = [...deliveries, delivery(outcome.contact.id, { sentAt: now })];
+        notified.push(outcome.negotiator.id);
+        deliveries = [...deliveries, delivery(outcome.negotiator.id, { sentAt: now })];
       } else if (outcome.kind === 'waiting') {
         now = outcome.untilMs;
       } else {
@@ -155,11 +155,11 @@ describe('AC2 - duplicate suppression', () => {
 
 // AC3: escalation waits out the window from the last send.
 describe('AC3 - timing', () => {
-  it('notifies the first contact immediately', () => {
+  it('notifies the first negotiator immediately', () => {
     expect(nextEscalation(request()).kind).toBe('notify');
   });
 
-  it('waits before escalating to the next contact', () => {
+  it('waits before escalating to the next negotiator', () => {
     const outcome = nextEscalation(
       request({ deliveries: [delivery('c1')], now: NOW + 60_000 }),
     );
@@ -170,7 +170,7 @@ describe('AC3 - timing', () => {
   });
 
   it('measures the window from the last send, not from the first', () => {
-    // A slow first delivery must not eat the time the second contact gets.
+    // A slow first delivery must not eat the time the second negotiator gets.
     const lateSend = NOW + 120_000;
     const outcome = nextEscalation(
       request({
@@ -185,27 +185,27 @@ describe('AC3 - timing', () => {
   });
 });
 
-// AC4: an unreachable contact does not stall the chain.
-describe('AC4 - unreachable contacts', () => {
-  it('skips a contact with no email address and no phone number', () => {
-    const withUnreachable: Contact[] = [
+// AC4: an unreachable negotiator does not stall the chain.
+describe('AC4 - unreachable negotiators', () => {
+  it('skips a negotiator with no email address and no phone number', () => {
+    const withUnreachable: Negotiator[] = [
       { id: 'broken', displayName: 'No Channels', email: null, phone: null, priority: 1 },
-      contacts[1]!,
+      negotiators[1]!,
     ];
 
-    const outcome = nextEscalation(request({ contacts: withUnreachable }));
+    const outcome = nextEscalation(request({ negotiators: withUnreachable }));
 
     // Reporting success would be a lie; failing the whole escalation would punish the
-    // subject for a data problem in their contact list.
+    // enquirer for a data problem in the negotiator list.
     expect(outcome.kind).toBe('notify');
     if (outcome.kind !== 'notify') return;
-    expect(outcome.contact.id).toBe('c2');
+    expect(outcome.negotiator.id).toBe('c2');
   });
 
   it('reports suppression when nobody is reachable', () => {
     const outcome = nextEscalation({
       ...request(),
-      contacts: [{ id: 'broken', displayName: 'No Channels', email: null, phone: null, priority: 1 }],
+      negotiators: [{ id: 'broken', displayName: 'No Channels', email: null, phone: null, priority: 1 }],
     });
 
     expect(outcome.kind).toBe('suppressed');
@@ -213,10 +213,10 @@ describe('AC4 - unreachable contacts', () => {
     expect(outcome.reason).toBe('no_reachable_channel');
   });
 
-  it('does not loop for ever on an unreachable contact', () => {
+  it('does not loop for ever on an unreachable negotiator', () => {
     // The first version recursed without recording the skip and hung. Caught by this
     // test; see AI_WORKLOG.md entry 2.
-    const many: Contact[] = Array.from({ length: 5 }, (_unused, index) => ({
+    const many: Negotiator[] = Array.from({ length: 5 }, (_unused, index) => ({
       id: `broken-${index}`,
       displayName: 'No Channels',
       email: null,
@@ -224,7 +224,7 @@ describe('AC4 - unreachable contacts', () => {
       priority: index + 1,
     }));
 
-    const outcome = nextEscalation(request({ contacts: many }));
+    const outcome = nextEscalation(request({ negotiators: many }));
     expect(outcome.kind).toBe('suppressed');
   });
 });
@@ -236,7 +236,7 @@ describe('AC5 - protecting personal information', () => {
 
     expect(outcome.kind).toBe('notify');
     if (outcome.kind !== 'notify') return;
-    expect(outcome.message.subjectFirstName).toBe('Juno');
+    expect(outcome.message.enquirerFirstName).toBe('Juno');
     expect(outcome.message.recipientName).toBe('Ada');
     // A message gets forwarded, screenshotted, or read from a lock screen by whoever is
     // holding the phone.
@@ -255,11 +255,11 @@ describe('AC5 - protecting personal information', () => {
   it('carries the demonstration notice', () => {
     const outcome = nextEscalation(request());
     if (outcome.kind !== 'notify') return;
-    expect(outcome.message.body).toContain('does not contact emergency services');
+    expect(outcome.message.body).toContain('does not negotiator emergency services');
   });
 
   it('falls back to something neutral for an empty display name', () => {
-    expect(firstNameOnly('   ')).toBe('A GuardianLink user');
+    expect(firstNameOnly('   ')).toBe('A EstateFlow user');
   });
 
   it('handles a single-word name', () => {
@@ -270,14 +270,14 @@ describe('AC5 - protecting personal information', () => {
 describe('AC5 - logging', () => {
   it('redacts personal fields at any nesting depth', () => {
     const redacted = redactForLog({
-      incidentId: 'incident-1',
-      contact: { id: 'c1', email: 'ada@example.com', phone: '+1 555 0101' },
+      enquiryId: 'enquiry-1',
+      negotiator: { id: 'c1', email: 'ada@example.com', phone: '+1 555 0101' },
       location: { latitude: 53.5, longitude: 3.2 },
     }) as Record<string, Record<string, unknown>>;
 
-    expect(redacted['incidentId']).toBe('incident-1');
-    expect(redacted['contact']?.['id']).toBe('c1');
-    expect(redacted['contact']?.['email']).toBe('[redacted]');
+    expect(redacted['enquiryId']).toBe('enquiry-1');
+    expect(redacted['negotiator']?.['id']).toBe('c1');
+    expect(redacted['negotiator']?.['email']).toBe('[redacted]');
     expect(redacted['location']?.['latitude']).toBe('[redacted]');
   });
 
@@ -293,8 +293,8 @@ describe('AC5 - logging', () => {
   it('keeps the identifiers that make a log useful', () => {
     const fields = escalationLogFields(request(), nextEscalation(request()));
 
-    expect(fields['incidentId']).toBe('incident-1');
-    expect(fields['contactId']).toBe('c1');
+    expect(fields['enquiryId']).toBe('enquiry-1');
+    expect(fields['negotiatorId']).toBe('c1');
     expect(fields['outcome']).toBe('notify');
     // Nobody needs a value to debug this, so nobody has a reason to log one.
     expect(JSON.stringify(fields)).not.toContain('@');
