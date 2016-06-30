@@ -138,7 +138,7 @@ The brief asks for ten. Here is the honest state of each.
 | Dependency audit | Configured in CI, not run on the build machine |
 | Secret scan | Configured in CI, not run on the build machine |
 | Build | Run, clean |
-| Container build | Dockerfile written, never built |
+| Container build | Built and run. The image loads the escalation module and exits |
 
 Four of those are not green, and they say so rather than being described in a way that
 implies otherwise.
