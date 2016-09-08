@@ -12,7 +12,6 @@ be accountable afterwards. The rules exist to close that gap.
 
 ```bash
 pnpm install
-pnpm build:packages
 pnpm verify
 ```
 
