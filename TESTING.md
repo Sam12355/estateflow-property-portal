@@ -73,5 +73,5 @@ than describing them in a way that implies otherwise.
 ## Recorded output
 
 [docs/test-results/](docs/test-results/) holds the real run. The failing runs described in
-[AI_WORKLOG.md](../AI_WORKLOG.md) are part of the record too: a repository about engineering
+[AI_WORKLOG.md](AI_WORKLOG.md) are part of the record too: a repository about engineering
 discipline that only shows the green run is missing its own point.

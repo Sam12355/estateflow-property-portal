@@ -5,67 +5,67 @@ repository expects to be worked in, so a human reviewer should read it too.
 
 The position here is that an AI agent is a fast, tireless, confident colleague with no memory and no
 accountability. That combination is useful and dangerous in specific ways, and the rules below are
-aimed at the dangerous ones.
+aimed at the dangerous ones. This repository is where that position is written down and tested, so
+the rules here are the ones the rest of the portfolio inherits.
+
+## What this repository is
+
+One vertical slice of a property portal: an enquiry arrives, the assigned negotiator has a window to
+pick it up, and it escalates to the branch manager if nobody does. `src/escalation.ts` is a pure
+function over state. There is no HTTP surface, no database and no UI, and adding one would bury the
+process artefacts this repository exists for.
 
 ## Before writing any code
 
 1. **A written specification exists first.** In `docs/specs/`, following
    [docs/ai/TASK_TEMPLATE.md](docs/ai/TASK_TEMPLATE.md). If the task does not have one, write the
    spec and stop for review. Do not write a spec and immediately implement it in the same step.
-2. **State the assumption rather than guessing silently.** If the spec does not answer something,
+2. **Tests come from the specification, before the implementation.** This is the finding from
+   worklog entry 1, not a preference: tests written alongside an implementation restate it, pass,
+   and hide unmet acceptance criteria.
+3. **State the assumption rather than guessing silently.** If the spec does not answer something,
    pick the sensible option, write it down in the spec under Assumptions, and continue.
-3. **Say which files you intend to touch, before touching them.**
+4. **Say which files you intend to touch, before touching them.**
 
 ## Non-negotiables
 
 These are not style preferences. Breaking any of them means the change is rejected regardless of
 whether it works.
 
-**Layering.** `domain/` imports nothing outside itself. `application/` imports `domain` and port
-interfaces. `infrastructure/` imports both. Never the other way.
+**Everything stays pure.** No I/O, no timers, no `Date.now()`, no `Math.random()`. Time arrives as a
+parameter. This is what makes "the window elapsed while a message was in flight" a unit test rather
+than something you reproduce by waiting.
 
-**Authorisation is checked in the service layer.** The route guard establishes who you are and
-whether your role could do this. Whether this particular record is yours is checked where the record
-is loaded. Both. A new endpoint that reads or mutates a resource and does not check ownership in the
-service is a security bug, not a missing nice-to-have.
+**Nothing personal reaches a message body, a log or an audit record.** No email address, no phone
+number, no full name. First names in the message, identifiers in the log, and the redaction helper
+walks nested objects to a depth limit. There are tests for all of it, including one that passes a
+whole request object in by mistake.
 
-**Time comes from the injected `Clock`.** Never `Date.now()`, never `new Date()`, in `domain/` or
-`application/`. There is a real bug recorded in TESTING.md caused by exactly this.
+**A recipient is notified at most once per enquiry.** The delivery set is consulted before choosing
+who is next, and any acknowledgement from anybody stops the chain.
 
-**Nothing sensitive reaches a log, an audit record, or an error message.** No coordinates, no email
-addresses, no phone numbers, no tokens, no message bodies. Log identifiers instead. The redaction
-layer is a safety net, not permission.
+**The escalation window runs from the last send, not from the enquiry.** A slow first delivery must
+not eat the time the first negotiator actually had.
 
-**Expected failures are `Result` values, not exceptions.** A new `DomainErrorCode` must be added to
-the exhaustive switch in `error-mapper.ts`, which will refuse to compile until its status code is
-decided.
+**An unreachable negotiator is skipped, not waited on.** Skipping must not start a timer for a
+message that was never sent. That was a real bug; it is worklog entry 2.
 
-**Every mutation of an enquiry carries an expected version.** If a new operation genuinely should
-not, say why in the pull request.
-
-**Endpoints a client will retry must deduplicate.** Mobile clients retry. Assume every write is
-delivered more than once.
-
-**No secret is ever written to a file in this repository.** Not in a test, not in a fixture, not in a
-comment, not as an example that looks real. `.env.example` takes placeholders.
-
-**Migrations are forward-only and additive.** New file, never an edit to one that has run.
+**No secret is ever written to a file in this repository.** Not in a test, not in a fixture, not in
+a comment, not as an example that looks real.
 
 ## What to do, and what to stop and ask about
 
-**Do freely:** add tests, fix a failing test, improve a comment that explains why, add an ADR,
-tighten a type, extend a Zod schema additively.
+**Do freely:** add tests, fix a failing test, improve a comment that explains why, tighten a type.
 
-**Do with a spec:** anything touching authentication, authorisation, the enquiry state machine,
-notification delivery, retention or deletion.
+**Do with a spec:** anything that changes the escalation rules, the suppression rules, or what
+appears in a message or a log.
 
-**Stop and ask:** changing a public contract in `packages/contracts`, changing a retention default,
-adding a runtime dependency, changing anything about how the demonstration notice is shown, or
-anything that would send data to a real external service.
+**Stop and ask:** adding a runtime dependency, adding I/O of any kind, or widening the repository
+beyond the one slice.
 
-**Never:** commit a secret, push to a remote, deploy anything, create a paid cloud resource, submit
-to an app store, weaken an authorisation check to make a test pass, or delete a test that is failing
-rather than fixing what it caught.
+**Never:** commit a secret, push to a remote, deploy anything, weaken an assertion to make a suite
+pass, or delete a failing test rather than fixing what it caught. The last one has happened here and
+is worklog entry 4.
 
 ## After writing code
 
@@ -74,8 +74,7 @@ Run these and paste the real output. Do not describe what you expect them to pri
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter @estateflow/api test
-pnpm --filter @estateflow/api test:e2e
+pnpm test
 ```
 
 Then review your own diff against [docs/ai/REVIEW_CHECKLIST.md](docs/ai/REVIEW_CHECKLIST.md).
@@ -92,10 +91,8 @@ did well; it is a sign that nobody was reviewing.
 
 ## Repository facts worth knowing
 
-- pnpm workspaces. `pnpm build:packages` before anything that imports `@estateflow/*`.
-- The test suite needs no external services. If you find yourself adding a service container to make
-  a test pass, you have taken a wrong turn.
-- `packages/contracts` is the single source of truth for the API surface. Change a schema there and
-  the API, the web client and the generated OpenAPI document all follow.
-- Tests use `FixedClock` and a deliberately cheap password hasher. Only the clock, the hasher and the
-  realtime publisher are swapped; everything else is production wiring.
+- pnpm, one package, no workspace. `pnpm verify` runs lint, types and tests.
+- The suite needs no external services and never will. If you find yourself adding one, you have
+  taken a wrong turn.
+- The trap here, and the one recorded four times in the worklog: generated code is usually locally
+  sensible and wrong in relation to something fifteen lines away.
