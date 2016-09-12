@@ -98,7 +98,7 @@ specified.
 - [x] Tests written from this document before the implementation existed
 - [x] Lint and type-check clean
 - [x] Nothing personal reaches a log field
-- [x] `AI_WORKLOG.md` records what was rejected and what was corrected
+- [x] TESTING.md records what was rejected and what was corrected
 - [x] Recorded verification output in `docs/test-results/`
 
 ## What actually happened

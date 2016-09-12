@@ -15,10 +15,10 @@ import {
  * These tests were written from the acceptance criteria in
  * docs/specs/0001-enquiry-escalation.md, before the implementation existed.
  *
- * That ordering is the single most important habit in this playbook. In the first attempt
- * the agent wrote the implementation and then wrote tests against it; they passed, and two
- * of the acceptance criteria were not actually met. Tests written from the specification
- * caught both immediately. AI_WORKLOG.md entry 1 has the detail.
+ * That ordering is the single most important habit here. The first attempt wrote the
+ * implementation and then tests against it; they passed, and two of the acceptance criteria
+ * were not actually met. Tests written from the specification caught both immediately.
+ * TESTING.md has the detail.
  */
 
 const NOW = 1_773_000_000_000;
@@ -215,7 +215,7 @@ describe('AC4 - unreachable negotiators', () => {
 
   it('does not loop for ever on an unreachable negotiator', () => {
     // The first version recursed without recording the skip and hung. Caught by this
-    // test; see AI_WORKLOG.md entry 2.
+    // test; TESTING.md has the detail.
     const many: Negotiator[] = Array.from({ length: 5 }, (_unused, index) => ({
       id: `broken-${index}`,
       displayName: 'No Channels',

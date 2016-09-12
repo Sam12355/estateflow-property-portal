@@ -2,7 +2,7 @@
   "name": "estateflow-property-portal",
   "version": "0.1.0",
   "private": true,
-  "description": "Controlled AI-assisted engineering: spec-first workflow with a small verified feature underneath it.",
+  "description": "Property enquiry routing and escalation, built specification-first, with a small verified feature underneath it.",
   "license": "MIT",
   "type": "module",
   "engines": { "node": ">=20.11.0" },

@@ -1,7 +1,7 @@
 # estateflow-property-portal
 
-**One slice of a property portal, built the way I build with an AI coding agent: what the
-process is, and what the agent actually got wrong.**
+**One slice of a property portal, built specification-first: what the process is, and the
+three bugs it caught that a reasonable-looking implementation had already passed.**
 
 > Part of the [portfolio](../PORTFOLIO.md). A demonstration, not a portal any branch runs
 > on.
@@ -25,14 +25,13 @@ process is, and what the agent actually got wrong.**
 
 ## The claim
 
-An AI agent is a fast, tireless, confident colleague with no memory and no accountability.
-That combination is useful in specific ways and dangerous in specific ways, and the process
-here is aimed squarely at the dangerous ones.
+A specification is worth writing when it can disagree with the code. Most cannot: they are
+written after the fact, or in language vague enough that any implementation satisfies them.
+One with numbered acceptance criteria, turned into tests before the implementation exists,
+can disagree, and on this feature it disagreed three times.
 
-The single most useful artefact in this repository is
-[AI_WORKLOG.md](AI_WORKLOG.md), because it records what was rejected. Anyone can show a
-clean diff. What is worth reading is the entry where the agent deleted a failing assertion
-to make the suite pass, and what the process now does about it.
+That is the whole argument here, and the evidence is in [TESTING.md](TESTING.md) rather
+than in an assertion that the process works.
 
 ## The feature underneath it
 
@@ -55,12 +54,11 @@ One vertical slice, chosen because it has three requirements that pull against e
 flowchart TB
     REQ["Product request<br/>one paragraph, a person's words"]
     SPEC["Specification<br/>scope, acceptance criteria, threats, tests, DoD"]
-    G1{"Human agrees the spec"}
+    G1{"Specification agreed"}
     TESTS["Tests written from the acceptance criteria<br/>BEFORE any implementation"]
     IMPL["Implementation"]
-    VERIFY["Lint, types, unit, integration, e2e, audit, secret scan, build"]
-    G2{"Human reviews the diff<br/>against the checklist"}
-    LOG["AI_WORKLOG.md"]
+    VERIFY["Lint, types, unit, audit, secret scan, build"]
+    G2{"Diff reviewed against the checklist"}
 
     REQ --> SPEC --> G1
     G1 -- unclear --> SPEC
@@ -68,52 +66,34 @@ flowchart TB
     VERIFY -- red --> IMPL
     VERIFY -- green --> G2
     G2 -- rejected --> IMPL
-    G2 -- accepted --> LOG
 ```
 
-The ordering of `TESTS` before `IMPL` is not a preference. It is the finding from
-[worklog entry 1](AI_WORKLOG.md): tests generated alongside an implementation are a
-restatement of that implementation. They passed, and two acceptance criteria were not met.
-Tests written from the specification found both immediately.
+The ordering of `TESTS` before `IMPL` is not a preference. Tests written alongside an
+implementation are a restatement of that implementation. They passed here, and two
+acceptance criteria were not met. Tests written from the specification found both
+immediately, and then a third nobody had looked for.
 
-## What the agent got wrong here
+## The three bugs the ordering caught
 
-All four are in the worklog with the correction. In summary:
+Each is described in full in [TESTING.md](TESTING.md).
 
-| Entry | What happened | The lesson |
-|-------|---------------|------------|
-| 1 | Tests written after the code passed, and hid two unmet criteria | Tests come from the spec, not the diff |
-| 2 | A skipped negotiator started an escalation timer for a message never sent | Generated code fails at the interaction, not in the function |
-| 3 | A comment described behaviour the code did not have | Comments are as confident as code and checked by nothing |
-| 4 | A failing assertion was deleted to make the suite pass | "Make the tests pass" is a dangerous instruction |
+| # | What was wrong | Why the ordering caught it |
+|---|----------------|----------------------------|
+| 1 | The escalation window was measured from the enquiry, not from the last send | AC3 says "from the last send". A test written from the code asserted the code |
+| 2 | A skipped unreachable negotiator started the window for a message never sent | AC4 says "without stalling the chain", so a test existed for a case nobody would have thought to write |
+| 3 | A refactor put `displayName` back into the log payload | AC5 forbids it, and the assertion was already there to fail |
 
-Entry 2 is the one to read if you only read one. The recursive version was locally
-reasonable, terminated correctly, and read fine. It was wrong only in relation to a branch
-fifteen lines further down.
-
-## What the agent was genuinely good at
-
-Recorded for balance, because a document that only lists failures is not a fair account.
-
-Exhaustive case tables. Mechanical consistency across many files. Published algorithms:
-WCAG relative luminance, full-jitter backoff variants, semver precedence for prereleases,
-all correct first time and faster than looking them up.
-
-The pattern: strong on breadth and on anything with a published answer, weak on anything
-needing a view of how one piece interacts with another.
+Bug 2 is the one to read. The implementation was locally reasonable, terminated correctly,
+and read fine. It was wrong only in relation to a branch fifteen lines further down, which
+is the class of defect that reading a diff does not find.
 
 ## Artefacts
 
 | Artefact | Where |
 |----------|-------|
 | Product request and specification | [docs/specs/0001-enquiry-escalation.md](docs/specs/0001-enquiry-escalation.md) |
-| Agent instructions | [CLAUDE.md](CLAUDE.md), [AGENTS.md](AGENTS.md) |
-| Workflow | [docs/ai/WORKFLOW.md](docs/ai/WORKFLOW.md) |
-| Hard security rules | [docs/ai/SECURITY_RULES.md](docs/ai/SECURITY_RULES.md) |
-| Review checklist | [docs/ai/REVIEW_CHECKLIST.md](docs/ai/REVIEW_CHECKLIST.md) |
-| Task template | [docs/ai/TASK_TEMPLATE.md](docs/ai/TASK_TEMPLATE.md) |
-| Isolated worktrees and parallel agents | [docs/ai/WORKTREES.md](docs/ai/WORKTREES.md) |
-| Worklog | [AI_WORKLOG.md](AI_WORKLOG.md) |
+| Review checklist | [.github/pull_request_template.md](.github/pull_request_template.md) |
+| Testing strategy and the three bugs | [TESTING.md](TESTING.md) |
 | Recorded verification | [docs/test-results/](docs/test-results/) |
 
 ## Running it
@@ -123,9 +103,9 @@ pnpm install
 pnpm verify     # lint, type-check, tests
 ```
 
-## Required checks
+## Engineering checks
 
-The brief asks for ten. Here is the honest state of each.
+Ten checks are applied across this portfolio. Here is the honest state of each here.
 
 | Check | State |
 |-------|-------|
@@ -140,26 +120,25 @@ The brief asks for ten. Here is the honest state of each.
 | Build | Run, clean |
 | Container build | Built and run. The image loads the escalation module and exits |
 
-Four of those are not green, and they say so rather than being described in a way that
+Three of those are not green, and they say so rather than being described in a way that
 implies otherwise.
 
 ## Known limitations
 
 - **This is one feature, not an application.** Deliberately. A larger surface would bury
-  the process artefacts that the repository exists for.
-- **The worklog is a real record, and it is mine.** Another engineer with a different
-  prompt would get different failures. It is evidence of a working process, not a general
-  claim about what agents do.
+  the specification work that the repository exists for.
 - **No integration or end-to-end tests**, for the reasons above.
 - **The audit and secret-scan jobs have never executed.** Configured only.
+- **The link token is a placeholder.** `enquiryId:negotiatorId`, unsigned. A real host signs
+  and expires it, and the source says so where it is built.
 
 ## Suggested repository metadata
 
-**Description:** Property enquiry routing and escalation, built with a specification-first
-AI-assisted workflow and an honest record of what the agent got wrong.
+**Description:** Property enquiry routing and escalation, built specification-first, with
+the bugs that ordering caught recorded rather than quietly fixed.
 
-**Topics:** `ai-assisted-development` `claude-code` `engineering-process`
-`code-review` `specification-driven` `typescript` `testing` `portfolio`
+**Topics:** `typescript` `specification-driven` `engineering-process` `testing`
+`code-review` `privacy` `portfolio`
 
 ## Licence
 

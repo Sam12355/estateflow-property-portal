@@ -5,20 +5,19 @@
 
 ## Context
 
-The obvious way to use a coding agent is to ask it for an implementation and its tests
-together. It is fast, the output looks complete, and the suite is green.
+The obvious way to build a feature is to write the implementation and its tests together.
+It is fast, the output looks complete, and the suite is green.
 
 ## Decision
 
 Tests are written from the acceptance criteria in the specification, before any
-implementation exists. The agent may write them, but it writes them from the specification
-and not from code it has already produced.
+implementation exists. They are derived from the criteria, never from code that already
+exists.
 
 ## Why
 
-The first attempt at this feature did it the obvious way. The agent produced an
-implementation and a matching test file. Everything passed. Two acceptance criteria were
-not met:
+The first attempt at this feature did it the obvious way: an implementation and a matching
+test file, written together. Everything passed. Two acceptance criteria were not met:
 
 - AC3 required the escalation window to be measured from the last send. The implementation
   measured from enquiry activation, so a slow first delivery ate the time the second

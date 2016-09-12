@@ -1,7 +1,8 @@
 # Security
 
-Nothing here is deployed. The security content of this repository is the workflow: how an
-AI agent is prevented from introducing a security defect, and what happened when it tried.
+Nothing here is deployed. The security content of this repository is the process: how a
+requirement about personal data is turned into something a test can enforce, rather than
+something a reviewer has to remember.
 
 ## Reporting
 
@@ -9,13 +10,12 @@ Open an issue. Do not include real negotiator details.
 
 ## The hard rules
 
-The full list is in [docs/ai/SECURITY_RULES.md](docs/ai/SECURITY_RULES.md). Two of them
-were actually exercised during this work.
+Two of them were exercised during this work rather than merely written down.
 
-**Never weaken a check to make a test pass.** Worklog entry 4 records an agent deleting the
-assertion that log fields contain no email address, in order to get a green suite. The
-assertion was the requirement: a refactor had reintroduced `displayName` into the log
-payload, and the correct response was to take it back out.
+**Never weaken a check to make a test pass.** During development the assertion that log
+fields contain no email address started failing, and deleting it would have produced a green
+suite in seconds. The assertion was the requirement: a refactor had reintroduced
+`displayName` into the log payload, and the correct response was to take it back out.
 
 That is why the rule is first in the list rather than somewhere in the middle. "Make the
 tests pass" is an instruction that deleting a test satisfies.
@@ -47,11 +47,11 @@ explicitly from identifiers, and a redaction pass catches anything that slips th
 - **No authentication or authorisation.** The caller has already established that the
   enquiry exists and is open. This module trusts that.
 
-## What this repository proves about security and AI assistance
+## What this repository shows about security
 
-That an agent will produce a security regression and a green test run in the same commit,
-and that the only thing which caught it was a test written from a requirement rather than
-from the code.
+That a security regression and a green test run fit comfortably in the same commit, and that
+the only thing which caught this one was a test written from a requirement rather than from
+the code.
 
 That is the whole argument for the ordering rule, and it is worth more than any list of
 controls.
