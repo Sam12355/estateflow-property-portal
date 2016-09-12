@@ -15,7 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - Redaction helper covering nested structures, with a depth limit
 - Log-field construction from identifiers only
 - Specification written and agreed before implementation
-- Worklog recording four things the agent got wrong and what corrected them
+- A record of the three bugs the specification-first ordering caught, and what fixed them
 
 ### Fixed during development
 - Tests generated alongside the implementation passed while two acceptance criteria were

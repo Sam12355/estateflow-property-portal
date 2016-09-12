@@ -5,7 +5,7 @@ Commands: `npx eslint src --ext .ts`, `npx tsc --noEmit`, `npx vitest run`
 Run at: 2026-07-31T09:41:49Z
 
 These tests were written from the acceptance criteria in docs/specs/0001 before the
-implementation existed. That ordering found three real bugs; see AI_WORKLOG.md.
+implementation existed. That ordering found three real bugs; TESTING.md describes each one.
 
 ```console
  RUN  v2.1.9 C:/Users/slaks/Documents/mygit/estateflow-property-portal

@@ -1,4 +1,4 @@
-# Container build for the playbook feature.
+# Container build for the escalation feature.
 #
 # Present because the required-checks list includes a container build, and because a
 # repository that lists a check it cannot run should either run it or say so. This one can

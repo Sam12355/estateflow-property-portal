@@ -15,8 +15,8 @@ pnpm verify        # lint, type-check, tests
 [docs/specs/0001-enquiry-escalation.md](docs/specs/0001-enquiry-escalation.md),
 before the implementation exists.**
 
-This is not a style preference. In the first attempt the agent wrote the implementation and
-then wrote tests against it. Everything passed and two acceptance criteria were unmet:
+This is not a style preference. In the first attempt the implementation came first and the
+tests were written against it. Everything passed and two acceptance criteria were unmet:
 
 - **AC3** said the escalation window is measured from the last send. The implementation
   measured it from the enquiry activation time.
@@ -48,7 +48,7 @@ verification of the specification rather than as a list of function names.
 
 **"running the escalation repeatedly notifies each person exactly once".** The scheduler
 runs on a timer and will overlap with itself. Without idempotence that becomes a stream of
-messages to somebody's family.
+messages to one enquirer.
 
 **"does not loop for ever on an unreachable negotiator".** This one existed only because AC4
 said "without stalling the chain". It caught the recursion bug that would otherwise have
@@ -61,17 +61,17 @@ pressure. This asserts the safe outcome is the default one.
 
 | Check | State |
 |-------|-------|
-| Integration tests | Not applicable. This is a pure function; its integration surface is the flagship notification worker, and duplicating it here would test the duplicate |
+| Integration tests | Not applicable. This is a pure function; its integration surface is a notification worker, which is not in this repository |
 | End-to-end tests | Not applicable. No UI, no HTTP surface |
 | Dependency audit | Configured in CI, never executed on the build machine |
 | Secret scan | Configured in CI, never executed on the build machine |
 | Container build | **Executed.** Built and run; the module loads |
 
-Four of the ten required checks are not green, and the README lists them as not green rather
-than describing them in a way that implies otherwise.
+Three of the ten checks this portfolio applies are not green, and the README lists them as
+not green rather than describing them in a way that implies otherwise.
 
 ## Recorded output
 
-[docs/test-results/](docs/test-results/) holds the real run. The failing runs described in
-[AI_WORKLOG.md](AI_WORKLOG.md) are part of the record too: a repository about engineering
-discipline that only shows the green run is missing its own point.
+[docs/test-results/](docs/test-results/) holds the real run. The three bugs described above
+are part of the record too: a repository about engineering discipline that only shows the
+green run is missing its own point.

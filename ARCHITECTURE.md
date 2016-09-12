@@ -1,26 +1,22 @@
 # Architecture
 
-Two layers, and the unusual thing is that the documentation is the product and the code is
+Two layers, and the unusual thing is that the specification is the product and the code is
 the evidence.
 
 ```mermaid
 flowchart TB
-    subgraph process["The process, which is the point"]
-        SPEC["docs/specs/0001<br/>acceptance criteria"]
-        RULES["docs/ai/SECURITY_RULES.md"]
-        CHECK["docs/ai/REVIEW_CHECKLIST.md"]
-        LOG["AI_WORKLOG.md<br/>what went wrong"]
+    subgraph process["The specification, which is the point"]
+        SPEC["docs/specs/0001<br/>scope, acceptance criteria, threats"]
+        DOD["Definition of Done<br/>in the same document"]
     end
 
     subgraph code["The feature, which is the evidence"]
-        ESC["src/escalation.ts"]
         TEST["src/escalation.spec.ts<br/>written from the criteria first"]
+        ESC["src/escalation.ts"]
     end
 
     SPEC --> TEST --> ESC
-    RULES --> ESC
-    CHECK --> LOG
-    ESC --> LOG
+    DOD --> ESC
 ```
 
 ## The feature
@@ -35,8 +31,8 @@ than something simpler:
 - **Duplicate prevention** must survive the scheduler overlapping with itself
 - **PII protection** must hold in the message, in the logs and in the audit record
 
-A feature with one requirement would not have produced the interaction bug in worklog
-entry 2, which is the most instructive thing here.
+A feature with one requirement would not have produced the interaction bug described in
+[TESTING.md](TESTING.md), which is the most instructive thing here.
 
 ## Why the decision is a pure function
 
@@ -63,8 +59,8 @@ when it does not.
 ## What is deliberately absent
 
 No HTTP surface, no database, no queue, no UI. This is one vertical slice, and a larger
-surface would bury the process artefacts the repository exists for.
+surface would bury the specification work the repository exists to show.
 
-The consequence, stated plainly: two of the ten required engineering checks, integration
-and end-to-end tests, are not applicable here, and the README says so rather than
-describing them in a way that implies otherwise.
+The consequence, stated plainly: two of the ten engineering checks this portfolio applies,
+integration and end-to-end tests, are not applicable here, and the README says so rather
+than describing them in a way that implies otherwise.

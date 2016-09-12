@@ -1,13 +1,13 @@
 /**
  * Enquiry escalation with duplicate suppression and PII protection.
  *
- * This is the feature the playbook was built around. It is deliberately small: one vertical
- * slice, three requirements, and enough edge cases to make the review discipline matter.
- * The artefacts in docs/ are the point of this repository; this file is the evidence they
- * were followed.
+ * This is the feature the repository was built around. It is deliberately small: one
+ * vertical slice, three requirements, and enough edge cases to make the review discipline
+ * matter. The specification is the point of this repository; this file is the evidence it
+ * was followed.
  *
  * Specification: docs/specs/0001-enquiry-escalation.md
- * What the agent got wrong, and what was corrected: AI_WORKLOG.md
+ * What went wrong on the way here, and what corrected it: TESTING.md
  */
 
 export interface Negotiator {
@@ -96,7 +96,7 @@ export function nextEscalation(request: EscalationRequest): EscalationOutcome {
    * This is a filter rather than a recursive call with a synthetic delivery injected. The
    * first version did the latter, and the injected delivery made the timing branch below
    * think a message had just been sent, so the chain waited out a window for something
-   * that was never sent. A spec-derived test caught it; see AI_WORKLOG.md entry 2.
+   * that was never sent. A spec-derived test caught it; TESTING.md has the detail.
    */
   const next = candidates.find((negotiator) => negotiator.email !== null || negotiator.phone !== null);
 
