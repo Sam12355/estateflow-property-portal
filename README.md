@@ -3,8 +3,7 @@
 **One slice of a property portal, built specification-first: what the process is, and the
 three bugs it caught that a reasonable-looking implementation had already passed.**
 
-> Part of the [portfolio](../PORTFOLIO.md). A demonstration, not a portal any branch runs
-> on.
+> A demonstration, not a portal any branch runs on.
 
 > **A reconstruction, not an employer's codebase.** I worked on property software in 2016
 > and 2017. The slice here is the one that mattered on a Monday morning: an enquiry comes
